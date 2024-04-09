@@ -7,35 +7,39 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/avitoTest/pkg/models/postgre"
 	_ "github.com/lib/pq"
-	// "github.com/test/pkg/models/postgre"
 )
 
 type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
-	// commands *postgre.CommandModel
+	banners  *postgre.BannerModel
 }
 
 func main() {
 	addr := flag.String("addr", ":8080", "Сетевой адрес веб-сервера")
-	// dsn := flag.String("dsn", "host=localhost port=5432 user=postgres password=1 dbname=postgres sslmode=disable", "Название PostgreSQL источника данных")
+	dsn := flag.String("dsn", "host=localhost port=5432 user=postgres password=1 dbname=postgres sslmode=disable", "Название PostgreSQL источника данных")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	// db, err := openDB(*dsn)
-	// if err != nil {
-	// 	errorLog.Fatal(err)
-	// }
+	db, err := openDB(*dsn)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
 
-	// defer db.Close()
+	defer db.Close()
 
 	app := &application{
 		errorLog: errorLog,
 		infoLog:  infoLog,
-		// commands: &postgre.CommandModel{DB: db},
+		banners:  &postgre.BannerModel{DB: db},
+	}
+
+	if err != nil {
+		log.Println(err)
 	}
 
 	srv := &http.Server{
@@ -45,7 +49,7 @@ func main() {
 	}
 
 	infoLog.Printf("Запуск сервера на 127.0.0.1%s", *addr)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	errorLog.Fatal(err)
 }
 
