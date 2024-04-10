@@ -3,6 +3,7 @@ package postgre
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 
 	"github.com/avitoTest/pkg/models"
 )
@@ -13,8 +14,8 @@ type BannerModel struct {
 
 // Insert - Метод для создание нового банера в базе дынных.
 func (m *BannerModel) Insert(banner models.Banner) error {
-	stmt_banner := `INSERT INTO Banners (Content, FeatureID, IsActive, LastModified)
-	VALUES ($1, $2, $3, NOW())`
+	stmt_banner := `INSERT INTO Banners (Content, FeatureID, IsActive, LastModified, CreatedAt)
+	VALUES ($1, $2, $3, NOW(), NOW())`
 	stmt_tags := `INSERT INTO BannerTags (BannerID, TagID)
 	VALUES ($1, $2)`
 	stmt_feature := `INSERT INTO BannerFeatures (BannerID, FeatureID)
@@ -25,7 +26,7 @@ func (m *BannerModel) Insert(banner models.Banner) error {
 		panic(err.Error())
 	}
 
-	_, err = m.DB.Exec(stmt_banner, string(contentJSON), banner.Feature_id, banner.Is_active)
+	_, err = m.DB.Exec(stmt_banner, string(contentJSON), banner.FeatureId, banner.IsActive)
 	if err != nil {
 		return err
 	}
@@ -42,7 +43,7 @@ func (m *BannerModel) Insert(banner models.Banner) error {
 		}
 	}
 
-	_, err = m.DB.Exec(stmt_feature, lastInsertID, banner.Feature_id)
+	_, err = m.DB.Exec(stmt_feature, lastInsertID, banner.FeatureId)
 	if err != nil {
 		return err
 	}
@@ -50,7 +51,7 @@ func (m *BannerModel) Insert(banner models.Banner) error {
 	return nil
 }
 
-func (m *BannerModel) Get(tag_id, feature_id int) error {
+func (m *BannerModel) Get(tag_id, feature_id int) (*models.Banner, error) {
 	stmt := `SELECT b.ID, b.Content
 	FROM Banners b
 	JOIN BannerTags bt ON b.ID = bt.BannerID
@@ -58,11 +59,53 @@ func (m *BannerModel) Get(tag_id, feature_id int) error {
 	WHERE bt.TagID = $1 AND bf.FeatureID = $2
 	`
 
-	_, err := m.DB.Exec(stmt, tag_id, feature_id)
+	row := m.DB.QueryRow(stmt, tag_id, feature_id)
+
+	s := &models.Banner{}
+
+	err := row.Scan(&s.ID, &s.Content)
 	if err != nil {
-		return err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, models.ErrNoRecord
+		} else {
+			return nil, err
+		}
 	}
 
+	return s, nil
+}
+
+// добавить получение массива тэгов
+func (m *BannerModel) GetList() ([]*models.Banner, error) {
+	stmt := `SELECT id, Content, FeatureID, IsActive, LastModified, CreatedAt 
+	FROM banners ORDER BY id DESC`
+
+	rows, err := m.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var banners []*models.Banner
+
+	for rows.Next() {
+		s := &models.Banner{}
+		err = rows.Scan(&s.ID, &s.FeatureId, &s.Content, &s.IsActive, &s.CreatedAt, &s.LastModified)
+		if err != nil {
+			return nil, err
+		}
+		banners = append(banners, s)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return banners, nil
+}
+
+func (m *BannerModel) Delete(id int) error {
 	return nil
 }
 
