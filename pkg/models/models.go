@@ -14,5 +14,5 @@ type Banner struct {
 	IsActive     bool                   `json:"is_active"`
 	Content      map[string]interface{} `json:"content"`
 	CreatedAt    time.Time              `json:"created_at"`
-	LastModified time.Time              `json:"created_at"`
+	LastModified time.Time              `json:"last_modified"`
 }

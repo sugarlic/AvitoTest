@@ -106,6 +106,26 @@ func (m *BannerModel) GetList() ([]*models.Banner, error) {
 }
 
 func (m *BannerModel) Delete(id int) error {
+	stmt_banners := `DELETE FROM banners
+	WHERE id = $1;`
+	stmt_tags := `DELETE FROM bannertags
+	WHERE bannerid = $1;`
+	stmt_features := `DELETE FROM bannerfeatures
+	WHERE id = $1;`
+
+	_, err := m.DB.Exec(stmt_banners, id)
+	if err != nil {
+		return err
+	}
+	_, err = m.DB.Exec(stmt_tags, id)
+	if err != nil {
+		return err
+	}
+	_, err = m.DB.Exec(stmt_features, id)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
