@@ -21,8 +21,10 @@ func (app *application) getBanner(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 	// use_last_revision, err := strconv.ParseBool(r.URL.Query().Get("tag_id"))
+	// if err != nil {
+	// 	use_last_revision = false
+	// }
 	// token := r.Header.Get("Authorization")
-
 }
 
 // получение списка баннеров или создание баннера
