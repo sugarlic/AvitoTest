@@ -22,8 +22,13 @@ func (app *application) notFound(w http.ResponseWriter) {
 	app.clientError(w, http.StatusNotFound)
 }
 
+func (app *application) noAccess(w http.ResponseWriter) {
+	app.clientError(w, http.StatusForbidden)
+}
+
 func (app *application) render(w http.ResponseWriter, s any) {
 	json_data, err := json.Marshal(s)
+
 	if err != nil {
 		app.serverError(w, err)
 		return
